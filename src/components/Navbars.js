@@ -1,7 +1,7 @@
 import { Button } from "@mui/material";
 import Link from "next/link";
 import React from "react";
-import { parseCookies, setCookie, destroyCookie } from 'nookies'
+import { destroyCookie } from 'nookies'
 import { Navbar } from "reactstrap";
 import { useRouter } from "next/router";
 
@@ -9,12 +9,13 @@ const Navbars = () => {
 
   const router = useRouter();
 
-  // For Logout remove data from the Local Storage
+  // For Logout remove data from the Cookie
   const handleLogout = () => {
       destroyCookie(null, 'loginUserData');
       router.push('/');
   }
 
+   {/* NavBar Section */}
   return (
     <div className="px-5 py-1 navbar-style">
       <Navbar>

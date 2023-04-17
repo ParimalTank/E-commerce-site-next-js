@@ -60,6 +60,7 @@ const ChangePassword = () => {
 
   const cookies = parseCookies();
 
+  // Get Cookie of Login User
   const getUserCookiesData = cookies.loginUserData;
   const userCookiesData = eval(getUserCookiesData);
 
@@ -70,6 +71,7 @@ const ChangePassword = () => {
 
   const [openSuccess, setOpenSuccess] = React.useState(false);
 
+  // For Success or Error Alert
   const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
@@ -96,6 +98,7 @@ const ChangePassword = () => {
     setOpenSuccess(false);
   };
 
+  // For Password Show Button
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -118,7 +121,7 @@ const ChangePassword = () => {
   };
 
   const getUserCookies = () => {
-    // Get User Signup Cookie user data
+    // Get User Signup Cookie of user data
     const getUserCookiesData = cookies.userData;
     const userCookiesData = eval(getUserCookiesData);
 
@@ -155,7 +158,8 @@ const ChangePassword = () => {
         console.log("error: ", error);
       });
   };
-
+  
+  {/* Change Password Section */}
   return (
     <div>
       <Navbars />
@@ -378,7 +382,7 @@ const ChangePassword = () => {
 
 export default ChangePassword;
 
-
+// For Private Route
 export async function getServerSideProps(ctx) {
   // Parse
   const cookies = nookies.get(ctx);

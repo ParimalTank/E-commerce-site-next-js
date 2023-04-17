@@ -3,7 +3,7 @@ import Navbars from "../../components/Navbars";
 import MuiAlert from "@mui/material/Alert";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { TextField, Grid, CardContent, Button, Snackbar } from "@mui/material";
+import { TextField, Grid, CardContent, Button, Snackbar, Typography } from "@mui/material";
 import Link from "next/link";
 import { parseCookies, setCookie, destroyCookie } from "nookies";
 import { useRouter } from "next/router";
@@ -20,8 +20,8 @@ let signUpSchema = Yup.object().shape({
 });
 
 const EditUserProfile = () => {
-  const cookies = parseCookies();
 
+  const cookies = parseCookies();
   const router = useRouter();
 
   // Get User Login Cookie loginuserdata
@@ -68,7 +68,6 @@ const EditUserProfile = () => {
 
   const getData = userCookiesData;
   
-
   const updatedUserValues = getData?.filter((user) => {
     return user.email === state?.email;
   })[0];
@@ -94,7 +93,6 @@ const EditUserProfile = () => {
   const onSubmit = (values) => {
 
     const getData = getUserCookies();
-    console.log('getData: ', getData);
 
     // Check Existing Users email id Index
     let getIndex;
@@ -106,10 +104,6 @@ const EditUserProfile = () => {
 
     getData.map((user, index) => {
       // Case 1: If the Entered Email id and local storage email and also compare index of this email
-    
-      console.log('user.email === values.email && index === getIndex: ', user.email === values.email && index === getIndex);
-      console.log('user.email !== values.email: ', user.email !== values.email);
-      console.log('user.email === values.email && index !== getIndex: ', user.email === values.email && index !== getIndex);
       if (user.email === values.email && index === getIndex) {
 
         user["firstName"] = values.firstName;
@@ -117,17 +111,14 @@ const EditUserProfile = () => {
         user["email"] = values.email;
         user["mobile"] = values.mobile;
 
-        // add updated user information object to localStorage
+        // add updated user information object to Cookie
         setCookie(null, "userData", JSON.stringify(getData), {
           maxAge: 3 * 24 * 60 * 60,
           path: "/",
         });
 
-        
         handleSuccess();
       } else if (user.email === values.email && index !== getIndex) {
-
-        
          handleError();
       } else if (user.email !== values.email) {
         // Check If Email is Already Exist with Entered Email
@@ -153,9 +144,6 @@ const EditUserProfile = () => {
             path: "/",
           });
 
-          const demo = getUserCookies();
-          
-
           handleSuccess();
           destroyCookie(null , 'loginUserData');
           router.push('/');
@@ -163,7 +151,8 @@ const EditUserProfile = () => {
       }
     });
   };
-
+  
+  {/* Edit User Profile Section  */}
   return (
     <div>
       <Snackbar
@@ -333,11 +322,10 @@ const EditUserProfile = () => {
               <Button variant="text" className="mx-3">
                 <Link
                   href="/changepassword"
-                  className="text-decoration-none"
                   id="change-password"
                   legacyBehavior
                 >
-                  Change Password
+                 <Typography className="edit-user-text">Change Password</Typography> 
                 </Link>
               </Button>
             </div>
@@ -350,7 +338,7 @@ const EditUserProfile = () => {
 
 export default EditUserProfile;
 
-
+// For Private Routing
 export async function getServerSideProps(ctx) {
   // Parse
   const cookies = nookies.get(ctx);

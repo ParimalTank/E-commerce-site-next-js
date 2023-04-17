@@ -75,6 +75,7 @@ const SignUp = () => {
 
   const router = useRouter();
 
+  // Get Cookie of User Data
   const cookies = parseCookies()
   let temp;
 
@@ -138,7 +139,7 @@ const SignUp = () => {
 
   const onSubmit = (values) => {
    
-
+    // Encrypt the Password
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(values.password, salt);
 
@@ -150,6 +151,7 @@ const SignUp = () => {
       password: hash,
     };    
 
+    // Check If the User is Already Registered or Not
     const usersData =  temp !== null && temp !== undefined  ? 
         temp.filter((user) => {
             return user.email === values.email;
@@ -164,7 +166,7 @@ const SignUp = () => {
       const usersData = [];
   
       usersData.push(user);
-
+      // if Not Register then set the Cookie
       if(temp!== null && temp !== undefined){
 
         setCookie(null,'userData' , JSON.stringify([...usersData, ...temp ]), {
@@ -191,13 +193,13 @@ const SignUp = () => {
 
       }
       
-
       handleSuccess();
       router.push('/products');
     }
       
   };
 
+  {/* Sign up Section */}
   return (
     <div className="main-sign-up">
       <Snackbar

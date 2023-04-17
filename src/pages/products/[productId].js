@@ -9,7 +9,7 @@ import nookies from "nookies";
 const ProductsDetails = () => {
 
   const router = useRouter();
-
+  // Get the Product Id From the Query
   const productId = router.query.productId
 
   const [productDetail, setProductDetails] = useState({});
@@ -23,6 +23,7 @@ const ProductsDetails = () => {
     loadData();
   }, []);
 
+  {/* Specific Product Section */}
   return (
     <>
       <div>
@@ -78,6 +79,7 @@ const ProductsDetails = () => {
 };
 export default ProductsDetails;
 
+// For Private Routing
 export async function getServerSideProps(ctx) {
   // Parse
   const cookies = nookies.get(ctx);

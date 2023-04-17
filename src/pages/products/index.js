@@ -35,14 +35,14 @@ const Products = () => {
   };
 
   useEffect(() => {
-    loadData(page, limit);
+    loadData(page, limit);  // get the Data From the API via Function Call
   }, [page, limit]);
 
   const handleChange = (e, page) => {
     console.log(page);
     setPage(page);
   };
-
+  {/* List of Product Section */}
   return (
     <>
       <Navbars />
@@ -148,6 +148,7 @@ const Products = () => {
 };
 export default Products;
 
+// For Private Routing
 export async function getServerSideProps(ctx) {
   // Parse
   const cookies = nookies.get(ctx);
