@@ -10,6 +10,7 @@ import {
   CardContent,
   Button,
   Snackbar,
+  Typography,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
@@ -18,6 +19,7 @@ import * as Yup from "yup";
 import MuiAlert from "@mui/material/Alert";
 import Link from "next/link";
 import { parseCookies, setCookie, destroyCookie } from 'nookies'
+import { useRouter } from "next/router";
 
 // For Password Encrypt and decrypt
 const bcrypt = require("bcryptjs-react");
@@ -71,21 +73,14 @@ const SignUp = () => {
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const router = useRouter();
 
   const cookies = parseCookies()
-  // console.log({ cookies })
   let temp;
 
-  if(cookies['Cookies']){
-    temp = JSON.parse(cookies['Cookies']);
-    console.log('temp: ', temp);
-    // console.log('temp: ', JSON.parse(temp));
+  if(cookies['userData']){
+    temp = JSON.parse(cookies['userData']);
   }
-
-  // console.log( JSON.parse(cookies['Cookies']))
-
-
-
 
   const user = {
     firstName: userData.firstName,
@@ -95,7 +90,7 @@ const SignUp = () => {
     password: userData.password,
   };
 
-  // For Password show and unshown
+  // For Password show and un shown
   const handleClickShowPassword = () => setShowPassword((show) => !show);
   const handleClickShowConfirmPassword = () =>
     setShowConfirmPassword((show) => !show);
@@ -144,37 +139,63 @@ const SignUp = () => {
   const onSubmit = (values) => {
    
 
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(values.password, salt);
+
     const user = {
       firstName: values.firstName,
       lastName: values.lastName,
       email: values.email,
       mobile: values.mobile,
-      password: '123456',
-    };
-    console.log('user',user)
+      password: hash,
+    };    
+
+    const usersData =  temp !== null && temp !== undefined  ? 
+        temp.filter((user) => {
+            return user.email === values.email;
+          })
+        : [];
+
+    if (usersData.length > 0) {
+      handleError();
+    } else {
 
       // Set
-      const userData = [];
+      const usersData = [];
   
-      userData.push(user);
+      usersData.push(user);
 
-      console.log('temp: ', temp);
       if(temp!== null && temp !== undefined){
-        console.log('temp: ', temp);
-        console.log('hii')
-        setCookie(null,'Cookies' , JSON.stringify([...userData, ...temp ]), {
+
+        setCookie(null,'userData' , JSON.stringify([...usersData, ...temp ]), {
           maxAge: 3 * 24 * 60 * 60,
           path: '/',
         })
+
+        setCookie(null,'loginUserData' , JSON.stringify([...usersData, ...temp ]), {
+          maxAge: 3 * 24 * 60 * 60,
+          path: '/',
+        })
+
       }else{
-        console.log('hello')
-        setCookie(null,'Cookies' , JSON.stringify(userData), {
+      
+        setCookie(null,'userData' , JSON.stringify(usersData), {
           maxAge: 30 * 24 * 60 * 60,
           path: '/',
         })
+
+        setCookie(null,'loginUserData' , JSON.stringify(usersData), {
+          maxAge: 30 * 24 * 60 * 60,
+          path: '/',
+        })
+
       }
+      
 
       handleSuccess();
+      router.push('/products');
+    }
+      
   };
 
   return (
@@ -415,7 +436,7 @@ const SignUp = () => {
             }}
           </Formik>
           <div className="d-flex align-items-center justify-content-center">
-            <h5 className="p-0 mb-0">Already have an Account?</h5>
+            <Typography varian='h5' className="p-0 mb-0">Already have an Account?</Typography>
             <Button variant="text" className="mx-3">
               <Link href='/' className="text-decoration-none">
                 Login
@@ -423,7 +444,6 @@ const SignUp = () => {
             </Button>
           </div>
         </div>
-        <button onClick={()=> destroyCookie(null, 'Cookies')}>Clear</button>
       </div>
     </div>
   );

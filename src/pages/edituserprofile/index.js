@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import Navbars from "../../components/Navbars";
-import MuiAlert from '@mui/material/Alert';
+import MuiAlert from "@mui/material/Alert";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import {
-  TextField,
-  Grid,
-  CardContent,
-  Button,
-  Snackbar,
-} from "@mui/material";
+import { TextField, Grid, CardContent, Button, Snackbar } from "@mui/material";
 import Link from "next/link";
+import { parseCookies, setCookie, destroyCookie } from "nookies";
+import { useRouter } from "next/router";
+import nookies from "nookies";
 
 // validation
 let signUpSchema = Yup.object().shape({
@@ -23,8 +20,20 @@ let signUpSchema = Yup.object().shape({
 });
 
 const EditUserProfile = () => {
-  const  loginUserData  = JSON.parse(localStorage.getItem('LoginUserData'));
-  const state = loginUserData?.pop();
+  const cookies = parseCookies();
+
+  const router = useRouter();
+
+  // Get User Login Cookie loginuserdata
+  const getCookiesData = cookies.loginUserData;
+  const cookiesData = eval(getCookiesData);
+  
+
+  const state = cookiesData?.pop();
+
+  // Get User Signup Cookie userdata
+  const getUserCookiesData = cookies.userData;
+  const userCookiesData = eval(getUserCookiesData);
 
   // For Success Or Alert Message
   const [openError, setOpenError] = useState(false);
@@ -41,112 +50,153 @@ const EditUserProfile = () => {
 
   const handleSuccess = () => {
     setOpenSuccess(true);
-  }
+  };
 
   const handleCloseError = (event, reason) => {
-    if (reason === 'clickaway') {
+    if (reason === "clickaway") {
       return;
     }
     setOpenError(false);
   };
 
   const handleCloseSuccess = (event, reason) => {
-    if (reason === 'clickaway') {
+    if (reason === "clickaway") {
       return;
     }
     setOpenSuccess(false);
   };
 
-  const getData = JSON.parse(localStorage.getItem("userData"));
+  const getData = userCookiesData;
+  
 
-  const updatedUserValues = getData.filter((user) => {
-    return user.email === state.email;
+  const updatedUserValues = getData?.filter((user) => {
+    return user.email === state?.email;
   })[0];
-
+  
+  
   // Data
   const initialValues = {
     validateOnMount: true,
-    firstName: updatedUserValues.firstName || "",
-    lastName: updatedUserValues.lastName || "",
-    email: updatedUserValues.email || "",
-    mobile: updatedUserValues.mobile || "",
+    firstName: updatedUserValues?.firstName || "",
+    lastName: updatedUserValues?.lastName || "",
+    email: updatedUserValues?.email || "",
+    mobile: updatedUserValues?.mobile || "",
+  };
+
+  const getUserCookies = () => {
+    // Get User Signup Cookie user data
+    const getUserCookiesData = cookies.userData;
+    const userCookiesData = eval(getUserCookiesData);
+
+    return userCookiesData;
   };
 
   const onSubmit = (values) => {
-    const getData = JSON.parse(localStorage.getItem("userData"));
+
+    const getData = getUserCookies();
+    console.log('getData: ', getData);
 
     // Check Existing Users email id Index
     let getIndex;
-    getData.map((user , index) =>{
-        if(user.email === state.email){
-          getIndex = index
-        }
-    })
+    getData.map((user, index) => {
+      if (user.email === state.email) {
+        getIndex = index;
+      }
+    });
 
-    getData.map((user , index) => {
+    getData.map((user, index) => {
       // Case 1: If the Entered Email id and local storage email and also compare index of this email
-      if (user.email === values.email  && index === getIndex ) {
+    
+      console.log('user.email === values.email && index === getIndex: ', user.email === values.email && index === getIndex);
+      console.log('user.email !== values.email: ', user.email !== values.email);
+      console.log('user.email === values.email && index !== getIndex: ', user.email === values.email && index !== getIndex);
+      if (user.email === values.email && index === getIndex) {
+
         user["firstName"] = values.firstName;
         user["lastName"] = values.lastName;
         user["email"] = values.email;
         user["mobile"] = values.mobile;
 
         // add updated user information object to localStorage
-        localStorage.setItem("userData", JSON.stringify(getData));
-        handleSuccess()
-      }else if(user.email === values.email && index !== getIndex){
+        setCookie(null, "userData", JSON.stringify(getData), {
+          maxAge: 3 * 24 * 60 * 60,
+          path: "/",
+        });
+
+        
+        handleSuccess();
+      } else if (user.email === values.email && index !== getIndex) {
+
+        
          handleError();
-      }else if(user.email !== values.email){
+      } else if (user.email !== values.email) {
         // Check If Email is Already Exist with Entered Email
         let userExistOrNot = false;
         getData.map((result) => {
-            if(result.email === values.email){
-              userExistOrNot=true
-            }
-        })
+          if (result.email === values.email) {
+            userExistOrNot = true;
+          }
+        });
 
-        if(userExistOrNot){
+        if (userExistOrNot) {
           handleError();
-        }else{
+          
+        } else {
           user["firstName"] = values.firstName;
           user["lastName"] = values.lastName;
           user["email"] = values.email;
           user["mobile"] = values.mobile;
-  
-           // add updated user information object to localStorage
-           localStorage.setItem("userData", JSON.stringify(getData));
-  
-          const getLoginUserData = JSON.parse(localStorage.getItem("LoginUserData"));
-            
-          // Updated Value Store into a Object
-          getLoginUserData[0]['firstName'] = values.firstName
-          getLoginUserData[0]['lastName'] = values.lastName
-          getLoginUserData[0]['email']=values.email
-          getLoginUserData[0]['mobile']=values.mobile
-          
-          // add new user object to localStorage
-            localStorage.setItem("LoginUserData", JSON.stringify(getLoginUserData));
-           handleSuccess()
-        }
 
+          // add updated user information object to localStorage
+          setCookie(null, "userData", JSON.stringify(getData), {
+            maxAge: 3 * 24 * 60 * 60,
+            path: "/",
+          });
+
+          const demo = getUserCookies();
+          
+
+          handleSuccess();
+          destroyCookie(null , 'loginUserData');
+          router.push('/');
+        }
       }
-         
     });
   };
 
   return (
     <div>
-      <Snackbar open={openError} autoHideDuration={2000} onClose={handleCloseError}  anchorOrigin={ { vertical: 'top', horizontal: 'right' }}>
-        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }} className='my-5'>
-           Email Id is Already in Used
+      <Snackbar
+        open={openError}
+        autoHideDuration={2000}
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseError}
+          severity="error"
+          sx={{ width: "100%" }}
+          className="my-5"
+        >
+          Email Id is Already in Used
         </Alert>
       </Snackbar>
 
-      <Snackbar open={openSuccess} autoHideDuration={2000} onClose={handleCloseSuccess}  anchorOrigin={ { vertical: 'top', horizontal: 'right' }}>
-        <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: '100%' }} className='my-5'>
+      <Snackbar
+        open={openSuccess}
+        autoHideDuration={2000}
+        onClose={handleCloseSuccess}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSuccess}
+          severity="success"
+          sx={{ width: "100%" }}
+          className="my-5"
+        >
           User Updated Successfully
         </Alert>
-      </Snackbar> 
+      </Snackbar>
 
       <Navbars />
 
@@ -282,7 +332,7 @@ const EditUserProfile = () => {
               <h6 className="p-0 mb-0">Want to change your password?</h6>
               <Button variant="text" className="mx-3">
                 <Link
-                  href='/changepassword'
+                  href="/changepassword"
                   className="text-decoration-none"
                   id="change-password"
                   legacyBehavior
@@ -301,3 +351,20 @@ const EditUserProfile = () => {
 export default EditUserProfile;
 
 
+export async function getServerSideProps(ctx) {
+  // Parse
+  const cookies = nookies.get(ctx);
+
+  if (!cookies?.loginUserData) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: "/",
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+}

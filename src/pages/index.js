@@ -10,6 +10,7 @@ import {
   CardContent,
   Snackbar,
   Button,
+  Typography,
 } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -17,6 +18,7 @@ import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { parseCookies, setCookie, destroyCookie } from 'nookies'
 
 // For Password Encrypt and decrypt
 const bcrypt = require("bcryptjs-react");
@@ -56,10 +58,17 @@ const Login = () => {
 
   const router = useRouter();
 
+  const cookies = parseCookies()
+
+  let temp;
+
+  if(cookies['loginUserData']){
+    temp = JSON.parse(cookies['loginUserData']);
+    
+  }
+
   // For Show Password Button
   const [showPassword, setShowPassword] = useState(false);
-
-  const cookies = new Cookies();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -78,6 +87,7 @@ const Login = () => {
     setOpenError(true);
   };
 
+
   const handleCloseError = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -86,48 +96,59 @@ const Login = () => {
   };
 
   const onSubmit = (values) => {
-    
-    // get Data from the localstorage
-    const getData = JSON.parse(localStorage.getItem("userData"));
 
-    const getLoginUserData = JSON.parse(localStorage.getItem("LoginUserData"));
+    const getCookiesData = cookies.userData;
+    const cookiesData = eval(getCookiesData);
+   
+     // if array is empty
+     const finaldata = cookiesData !== null ? cookiesData : [];
+     
 
-    const cookeExpiration = 14 * 60 * 60 * 24 * 1000 // Twelve Days
+     const userEmail = values.email;
+     const userPassword = values.password;
 
-    // if array is empty
-    const finaldata = getLoginUserData !== null ? getLoginUserData : [];
 
-    const userEmail = values.email;
-    const userPassword = values.password;
-
-    // Check User Credentials
-    getData.map((user) => {
+      // Check User Credentials
+      finaldata.map((user) => {
       if (
         user.email === userEmail &&
         bcrypt.compareSync(userPassword, user.password)
       ) {
 
-        const userObj = {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          mobile: user.mobile,
-          password: user.password,
-        };
+        const user = {
+          email : values.email,
+          password : values.password
+       };
 
-        // set new user object
-        setLoginUserData([...loginUserData, userObj]);
+           // Set
+          const usersData = [];
+          
+          usersData.push(user);
 
-        // add new user object to localstorage
-        const userDataArray = [...finaldata, userObj];
-        localStorage.setItem("LoginUserData", JSON.stringify(userDataArray));
+          if(temp!== null && temp !== undefined){
 
-        router.push('/products');
+            setCookie(null,'loginUserData' , JSON.stringify([...usersData, ...temp ]), {
+              maxAge: 3 * 24 * 60 * 60,
+              path: '/',
+            })
 
+            
+          }else{
+          
+            setCookie(null,'loginUserData' , JSON.stringify(usersData), {
+              maxAge: 3 * 24 * 60 * 60,
+              path: '/',
+            })
+
+            // localStorage.setItem("LoginUserData", JSON.stringify(usersData));
+            
+          }
+
+         router.push('/products');
       } else {
         handleError();
       }
-    });
+    });  
   };
 
   return (
@@ -249,7 +270,7 @@ const Login = () => {
           </Formik>
 
           <div className="d-flex align-items-center justify-content-center">
-            <h5> dont have a Account?</h5>
+            <Typography variant="h5"> Do not have an Account?</Typography>
             <Button variant="text" className="mx-3" id="signup-btn">
               <Link href='/signup' className="text-decoration-none">
                 Sign Up
@@ -263,15 +284,3 @@ const Login = () => {
 };
 
 export default Login;
-
-// export  async function getServerSideProps(context){
-
-//   const  { params , req , res , query } = context 
-
-//   // set Cookies 
-//      res.setHeader('set-cookie' , [ 'name=parimal' ] );
-
-//    // get Cookies
-//       req.headers.cookie;
-//       const { data } = params;
-// } 

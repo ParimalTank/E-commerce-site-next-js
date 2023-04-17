@@ -16,6 +16,8 @@ import {
   IconButton,
 } from "@mui/material";
 import { useRouter } from "next/router";
+import { parseCookies, setCookie, destroyCookie } from "nookies";
+import nookies from "nookies";
 
 // For Password Encrypt and decrypt
 const bcrypt = require("bcryptjs-react");
@@ -56,8 +58,12 @@ let signUpSchema = Yup.object().shape({
 const ChangePassword = () => {
   const router = useRouter();
 
-  const loginUserData = JSON.parse(localStorage.getItem("LoginUserData"));
-  const state = loginUserData.pop();
+  const cookies = parseCookies();
+
+  const getUserCookiesData = cookies.loginUserData;
+  const userCookiesData = eval(getUserCookiesData);
+
+  const state = userCookiesData?.pop();
 
   // For Success Or Alert Message
   const [openError, setOpenError] = React.useState(false);
@@ -95,10 +101,9 @@ const ChangePassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
-  const handleClickShowCurrentPassword = () =>
-    setShowCurrentPassword((show) => !show);
-  const handleClickShowConfirmPassword = () =>
-    setShowConfirmPassword((show) => !show);
+
+  const handleClickShowCurrentPassword = () => setShowCurrentPassword((show) => !show);
+  const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
 
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
@@ -112,14 +117,22 @@ const ChangePassword = () => {
     event.preventDefault();
   };
 
+  const getUserCookies = () => {
+    // Get User Signup Cookie user data
+    const getUserCookiesData = cookies.userData;
+    const userCookiesData = eval(getUserCookiesData);
+
+    return userCookiesData;
+  };
+
   const onSubmit = (values) => {
-    const getData = JSON.parse(localStorage.getItem("userData"));
+    
+    const getData = getUserCookies();
 
     const index = getData.find((e) => e.email === state.email);
 
     // Compare Users Existing Password
-    bcrypt
-      .compare(values.currentPassword, index.password)
+    bcrypt.compare(values.currentPassword, index.password)
       .then((result) => {
         if (result === false) {
           handleError();
@@ -128,9 +141,14 @@ const ChangePassword = () => {
           const hash = bcrypt.hashSync(values.password, salt);
           index["password"] = hash;
 
-          localStorage.setItem("userData", JSON.stringify(getData));
+          setCookie(null, "userData", JSON.stringify(getData), {
+            maxAge: 3 * 24 * 60 * 60,
+            path: "/",
+          });
+
           handleSuccess();
-          router.push('/changepassword');
+          destroyCookie(null, 'loginUserData');
+          router.push('/');
         }
       })
       .catch((error) => {
@@ -359,3 +377,22 @@ const ChangePassword = () => {
 };
 
 export default ChangePassword;
+
+
+export async function getServerSideProps(ctx) {
+  // Parse
+  const cookies = nookies.get(ctx);
+
+  if (!cookies?.loginUserData) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: "/",
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+}

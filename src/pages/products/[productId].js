@@ -4,6 +4,7 @@ import Navbars from '../../components/Navbars'
 import { Grid, Rating, Typography } from "@mui/material";
 import Carousel from "react-bootstrap/Carousel";
 import { useRouter } from "next/router";
+import nookies from "nookies";
 
 const ProductsDetails = () => {
 
@@ -75,5 +76,22 @@ const ProductsDetails = () => {
     </>
   );
 };
-
 export default ProductsDetails;
+
+export async function getServerSideProps(ctx) {
+  // Parse
+  const cookies = nookies.get(ctx);
+
+  if (!cookies?.loginUserData) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: "/",
+      },
+    };
+  }
+  
+  return {
+    props: {},
+  };
+}
